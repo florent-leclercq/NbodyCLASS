@@ -105,8 +105,8 @@ extern "C" {
                 struct background * pba,
                 struct perturbs * ppt,
                 struct spectra * psp,
-                struct output * pop
-                );
+                struct output * pop,
+                int index_pk);
 
   int output_pk_nl(
                    struct background * pba,

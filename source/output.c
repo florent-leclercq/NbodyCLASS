@@ -137,17 +137,22 @@ int output_init(
 
   /** - deal with all Fourier matter power spectra P(k)'s */
 
-  if (ppt->has_pk_matter == _TRUE_) {
+  if (ppt->has_pk == _TRUE_){
 
-    class_call(output_pk(pba,ppt,psp,pop),
+    if ((ppt->has_pk_matter == _TRUE_)&&(pnl->method != nl_none)){
+
+        class_call(output_pk_nl(pba,ppt,psp,pop),
+                   pop->error_message,
+                   pop->error_message);
+    }
+    int index_pk;
+    for (index_pk=0; index_pk<psp->pk_size; index_pk++){
+
+      class_call(output_pk(pba,ppt,psp,pop,index_pk),
                pop->error_message,
                pop->error_message);
-
-    if (pnl->method != nl_none) {
-          class_call(output_pk_nl(pba,ppt,psp,pop),
-                     pop->error_message,
-                     pop->error_message);
     }
+
   }
 
   /** - deal with density and matter power spectra */
@@ -597,7 +602,8 @@ int output_pk(
               struct background * pba,
               struct perturbs * ppt,
               struct spectra * psp,
-              struct output * pop
+              struct output * pop,
+              int index_pk
               ) {
 
   /** Summary: */
@@ -624,9 +630,18 @@ int output_pk(
 
   FileName file_name;
   FileName redshift_suffix;
+  FileName pktype;
   char first_line[_LINE_LENGTH_MAX_];
 
   index_md=ppt->index_md_scalars;
+
+  if (index_pk == psp->index_pk_delta_m)
+    sprintf(pktype,"matter");
+  else if (index_pk == psp->index_pk_displacement)
+    sprintf(pktype,"disp");
+  else
+    sprintf(pktype,"unknown");
+
 
   for (index_z = 0; index_z < pop->z_pk_num; index_z++) {
 
@@ -637,9 +652,10 @@ int output_pk(
                "P(k,z) computed up to z=%f but requested at z=%f. Must increase z_max_pk in precision file.",psp->z_max_pk,pop->z_pk[index_z]);
 
     if (pop->z_pk_num == 1)
-      redshift_suffix[0]='\0';
+      sprintf(redshift_suffix,"%s",pktype);
+
     else
-      sprintf(redshift_suffix,"z%d_",index_z+1);
+      sprintf(redshift_suffix,"z%d_%s",index_z+1,pktype);
 
     /** - second, open only the relevant files, and write a heading in each of them */
 
@@ -807,19 +823,19 @@ int output_pk(
       for (index_k=0; index_k<psp->ln_k_size; index_k++) {
 
         if (psp->ic_size[index_md] == 1) {
-          pk_tot[index_k] = exp(psp->ln_pk[(psp->ln_tau_size-1) * psp->ln_k_size + index_k]);
+          pk_tot[index_k] = exp(psp->ln_pk[index_pk][(psp->ln_tau_size-1) * psp->ln_k_size + index_k]);
         }
         else {
           pk_tot[index_k] = 0.;
           for (index_ic1=0; index_ic1 < psp->ic_size[index_md]; index_ic1++) {
             index_ic1_ic2 = index_symmetric_matrix(index_ic1,index_ic1,psp->ic_size[index_md]);
-            pk_ic[index_k * psp->ic_ic_size[index_md] + index_ic1_ic2] = exp(psp->ln_pk[((psp->ln_tau_size-1) * psp->ln_k_size + index_k) * psp->ic_ic_size[index_md] + index_ic1_ic2]);
+            pk_ic[index_k * psp->ic_ic_size[index_md] + index_ic1_ic2] = exp(psp->ln_pk[index_pk][((psp->ln_tau_size-1) * psp->ln_k_size + index_k) * psp->ic_ic_size[index_md] + index_ic1_ic2]);
             pk_tot[index_k] += pk_ic[index_k * psp->ic_ic_size[index_md] + index_ic1_ic2];
           }
           for (index_ic1=0; index_ic1 < psp->ic_size[index_md]; index_ic1++) {
             for (index_ic2 = index_ic1+1; index_ic2 < psp->ic_size[index_md]; index_ic2++) {
               pk_ic[index_k * psp->ic_ic_size[index_md] + index_symmetric_matrix(index_ic1,index_ic2,psp->ic_size[index_md])] =
-                psp->ln_pk[index_k * psp->ic_ic_size[index_md] + index_symmetric_matrix(index_ic1,index_ic2,psp->ic_size[index_md])]
+                psp->ln_pk[index_pk][index_k * psp->ic_ic_size[index_md] + index_symmetric_matrix(index_ic1,index_ic2,psp->ic_size[index_md])]
                 *sqrt(pk_ic[index_k * psp->ic_ic_size[index_md] + index_symmetric_matrix(index_ic1,index_ic1,psp->ic_size[index_md])] *
                       pk_ic[index_k * psp->ic_ic_size[index_md] + index_symmetric_matrix(index_ic2,index_ic2,psp->ic_size[index_md])]);
               pk_tot[index_k] += 2.*pk_ic[index_k * psp->ic_ic_size[index_md] + index_ic1_ic2];
@@ -837,7 +853,8 @@ int output_pk(
                                  linear,
                                  pop->z_pk[index_z],
                                  pk_tot,
-                                 pk_ic),
+                                 pk_ic,
+                                 index_pk),
                  psp->error_message,
                  pop->error_message);
     }

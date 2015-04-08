@@ -129,7 +129,9 @@ struct perturbs
   short has_cl_cmb_lensing_potential; /**< do we need Cl's for CMB lensing potential? */
   short has_cl_lensing_potential;     /**< do we need Cl's for galaxy lensing potential? */
   short has_cl_number_count;          /**< do we need Cl's for density number count? */
+  short has_pk;                       /**< do we need any power spectra? */
   short has_pk_matter;                /**< do we need matter Fourier spectrum? */
+  short has_pk_displacement;          /**< do we need displacement Fourier spectrum? */
   short has_density_transfers;        /**< do we need to output individual matter density transfer functions? */
   short has_velocity_transfers;       /**< do we need to output individual matter velocity transfer functions? */
 
@@ -251,6 +253,7 @@ struct perturbs
   short has_source_theta_ur; /**< do we need source for theta of ultra-relativistic neutrinos/relics? */
   short has_source_theta_ncdm; /**< do we need source for theta of all non-cold dark matter species (e.g. massive neutrinos)? */
   short has_source_phi;          /**< do we need source for metric fluctuation phi? */
+  short has_source_R;            /**< do we need source for comoving curvature perturbation R? */
   short has_source_phi_prime;    /**< do we need source for metric fluctuation phi'? */
   short has_source_phi_plus_psi; /**< do we need source for metric fluctuation (phi+psi)? */
   short has_source_psi;          /**< do we need source for metric fluctuation psi? */
@@ -291,6 +294,7 @@ struct perturbs
   int index_tp_phi_prime;    /**< index value for metric fluctuation phi' */
   int index_tp_phi_plus_psi; /**< index value for metric fluctuation phi+psi */
   int index_tp_psi;          /**< index value for metric fluctuation psi */
+  int index_tp_R;          /**< index value for metric fluctuation phi */
 
   int * tp_size; /**< number of types tp_size[index_md] included in computation for each mode */
 

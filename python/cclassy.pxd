@@ -286,7 +286,8 @@ cdef extern from "class.h":
         int mode,
         double z,
         double * output_tot,
-        double * output_ic
+        double * output_ic,
+        int index_pk
         )
 
     int spectra_pk_at_k_and_z(
@@ -296,7 +297,8 @@ cdef extern from "class.h":
         double k,
         double z,
         double * pk,
-        double * pk_ic)
+        double * pk_ic,
+        int index_pk)
 
     int spectra_pk_nl_at_k_and_z(
         void* pba,

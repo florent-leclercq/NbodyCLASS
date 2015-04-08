@@ -1239,6 +1239,14 @@ int input_read_parameters(
       ppt->has_perturbations = _TRUE_;
     }
 
+    if ((strstr(string1,"dispPk") != NULL) || (strstr(string1,"DispPk") != NULL) || (strstr(string1,"DISPPK") != NULL)) {
+      ppt->has_pk_displacement=_TRUE_;
+      ppt->has_perturbations = _TRUE_;
+    }
+
+    if ((ppt->has_pk_matter == _TRUE_) || (ppt->has_pk_displacement == _TRUE_) )
+      ppt->has_pk = _TRUE_;
+
     if ((strstr(string1,"mTk") != NULL) || (strstr(string1,"MTk") != NULL) || (strstr(string1,"MTK") != NULL) ||
         (strstr(string1,"dTk") != NULL) || (strstr(string1,"DTk") != NULL) || (strstr(string1,"DTK") != NULL)) {
       ppt->has_density_transfers=_TRUE_;
@@ -1396,9 +1404,9 @@ int input_read_parameters(
                  errmsg,
                  "Inconsistency: you want C_l's for cmb lensing potential, but no scalar modes\n");
 
-      class_test(ppt->has_pk_matter == _TRUE_,
+      class_test(ppt->has_pk == _TRUE_,
                  errmsg,
-                 "Inconsistency: you want P(k) of matter, but no scalar modes\n");
+                 "Inconsistency: you want a P(k), but no scalar modes\n");
 
     }
 
@@ -1977,7 +1985,7 @@ int input_read_parameters(
 
   }
 
-  if ((ppt->has_pk_matter == _TRUE_) || (ppt->has_density_transfers == _TRUE_) || (ppt->has_velocity_transfers == _TRUE_)) {
+  if ((ppt->has_pk == _TRUE_) || (ppt->has_density_transfers == _TRUE_) || (ppt->has_velocity_transfers == _TRUE_)) {
 
     class_call(parser_read_double(pfc,"P_k_max_h/Mpc",&param1,&flag1,errmsg),
                errmsg,
@@ -2683,7 +2691,9 @@ int input_default_params(
   ppt->has_cl_cmb_lensing_potential = _FALSE_;
   ppt->has_cl_number_count = _FALSE_;
   ppt->has_cl_lensing_potential = _FALSE_;
+  ppt->has_pk = _FALSE_;
   ppt->has_pk_matter = _FALSE_;
+  ppt->has_pk_displacement = _FALSE_;
   ppt->has_density_transfers = _FALSE_;
   ppt->has_velocity_transfers = _FALSE_;
 

@@ -567,6 +567,7 @@ int perturb_indices_of_perturbs(
   ppt->has_source_phi_prime = _FALSE_;
   ppt->has_source_phi_plus_psi = _FALSE_;
   ppt->has_source_psi = _FALSE_;
+  ppt->has_source_R = _FALSE_;
 
   /** - source flags and indices, for sources that all modes have in
       common (temperature, polarization, ...). For temperature, the
@@ -624,6 +625,10 @@ int perturb_indices_of_perturbs(
       if ((ppt->has_pk_matter == _TRUE_) || (ppt->has_nl_corrections_based_on_delta_m)) {
         ppt->has_lss = _TRUE_;
         ppt->has_source_delta_m = _TRUE_;
+      }
+
+      if (ppt->has_pk_displacement == _TRUE_){
+        ppt->has_source_R = _TRUE_;
       }
 
       if (ppt->has_density_transfers == _TRUE_) {
@@ -712,6 +717,7 @@ int perturb_indices_of_perturbs(
       class_define_index(ppt->index_tp_phi_prime,  ppt->has_source_phi_prime, index_type,1);
       class_define_index(ppt->index_tp_phi_plus_psi,ppt->has_source_phi_plus_psi,index_type,1);
       class_define_index(ppt->index_tp_psi,        ppt->has_source_psi,       index_type,1);
+      class_define_index(ppt->index_tp_R,          ppt->has_source_R,         index_type,1);
       ppt->tp_size[index_md] = index_type;
 
       class_test(index_type == 0,
@@ -1294,7 +1300,7 @@ int perturb_get_k_list(
 
     /* find k_max: */
 
-    if ((ppt->has_pk_matter == _TRUE_) || (ppt->has_density_transfers == _TRUE_) || (ppt->has_velocity_transfers == _TRUE_))
+    if ((ppt->has_pk == _TRUE_) || (ppt->has_density_transfers == _TRUE_) || (ppt->has_velocity_transfers == _TRUE_))
       k_max = MAX(k_max,ppt->k_max_for_pk);
 
     if (ppt->has_nl_corrections_based_on_delta_m == _TRUE_)
@@ -2433,6 +2439,8 @@ int perturb_prepare_output(struct background * pba,
       class_store_columntitle(ppt->scalar_titles,"theta_b",_TRUE_);
       class_store_columntitle(ppt->scalar_titles,"psi",_TRUE_);
       class_store_columntitle(ppt->scalar_titles,"phi",_TRUE_);
+      class_store_columntitle(ppt->scalar_titles,"R",_TRUE_);
+      class_store_columntitle(ppt->scalar_titles,"pzratio",_TRUE_);
       /* Perturbed recombination */
       class_store_columntitle(ppt->scalar_titles,"delta_Tb",ppt->has_perturbed_recombination);
       class_store_columntitle(ppt->scalar_titles,"delta_chi",ppt->has_perturbed_recombination);
@@ -5918,6 +5926,25 @@ int perturb_sources(
       _set_source_(ppt->index_tp_delta_m) = ppw->delta_m;
     }
 
+    /* "comoving curvature perturbation" R */
+    if (ppt->has_source_R == _TRUE_) {
+      double phi=0., phiprime=0.,H, a;
+      a = pvecback[pba->index_bg_a];
+      H = pvecback[pba->index_bg_H];
+      if (ppt->gauge == newtonian){
+        phi = y[ppw->pv->index_pt_phi];
+        phiprime = dy[ppw->pv->index_pt_phi];
+      }
+      if (ppt->gauge == synchronous){
+        phi = y[ppw->pv->index_pt_eta] - a_prime_over_a * pvecmetric[ppw->index_mt_alpha];
+        phiprime = dy[ppw->pv->index_pt_eta]
+          - a_prime_over_a_prime * pvecmetric[ppw->index_mt_alpha]
+          - a_prime_over_a * pvecmetric[ppw->index_mt_alpha_prime];
+      }
+      _set_source_(ppt->index_tp_R) = phi+2./3.*(phiprime/(a*H)+phi)*3./2.*(H*H+pba->K/a/a)/(pba->K/a/a-pvecback[pba->index_bg_H_prime]/a);
+
+    }
+
     /* delta_g */
     if (ppt->has_source_delta_g == _TRUE_)  {
       _set_source_(ppt->index_tp_delta_g) = delta_g;
@@ -6145,7 +6172,7 @@ int perturb_print_variables(double tau,
   double delta_p_ncdm = 0.0;
   double factor = 0.0;
   double q,q2,epsilon;
-  double a,a2,H;
+  double a,a2,H,a_prime_over_a,a_prime_over_a_prime;
   int idx,index_q, storeidx;
   double *dataptr;
 
@@ -6166,6 +6193,8 @@ int perturb_print_variables(double tau,
   a = pvecback[pba->index_bg_a];
   a2 = a*a;
   H = pvecback[pba->index_bg_H];
+  a_prime_over_a = a * H; /* (a'/a)=aH */
+  a_prime_over_a_prime = pvecback[pba->index_bg_H_prime] * a + pow(a_prime_over_a,2); /* (a'/a)' = aH'+(aH)^2 */
 
   /** perturbed recombination **/
 
@@ -6360,6 +6389,18 @@ int perturb_print_variables(double tau,
     class_store_double(dataptr, theta_b, _TRUE_, storeidx);
     class_store_double(dataptr, psi, _TRUE_, storeidx);
     class_store_double(dataptr, phi, _TRUE_, storeidx);
+    double R, phiprime=0.;
+    if (ppt->gauge == newtonian){
+      phiprime = dy[ppw->pv->index_pt_phi];
+    }
+    if (ppt->gauge == synchronous){
+      phiprime = dy[ppw->pv->index_pt_eta]
+        - a_prime_over_a_prime * pvecmetric[ppw->index_mt_alpha]
+        - a_prime_over_a * pvecmetric[ppw->index_mt_alpha_prime];
+    }
+    R = phi+2./3.*(phiprime/(a*H)+phi)*3./2.*(H*H+pba->K/a/a)/(pba->K/a/a-pvecback[pba->index_bg_H_prime]/a);
+    class_store_double(dataptr, R, _TRUE_, storeidx);
+    class_store_double(dataptr, phi/R-3./5., _TRUE_, storeidx);
     /* perturbed recombination */
     class_store_double(dataptr, delta_temp, ppt->has_perturbed_recombination, storeidx);
     class_store_double(dataptr, delta_chi, ppt->has_perturbed_recombination, storeidx);

@@ -143,13 +143,18 @@ struct spectra {
 
   //@{
 
+  int index_pk_delta_m; /**< index for matter power spectrum */
+  int index_pk_displacement; /**< index for displacement power spectrum */
+  int pk_size;
+  int * index_tp_for_pk;
+
   int ln_k_size;    /**< number ln(k) values */
   double * ln_k;    /**< list of ln(k) values ln_k[index_k] */
 
   int ln_tau_size;  /**< number ln(tau) values (only one if z_max_pk = 0) */
   double * ln_tau;  /**< list of ln(tau) values ln_tau[index_tau] */
 
-  double * ln_pk;   /**< Matter power spectrum.
+  double ** ln_pk;   /**< Matter power spectrum.
                        depends on indices index_md, index_ic1, index_ic2, index_k, index_tau as:
                        ln_pk[(index_tau * psp->k_size + index_k)* psp->ic_ic_size[index_md] + index_ic1_ic2]
                        where index_ic1_ic2 labels ordered pairs (index_ic1, index_ic2) (since
@@ -164,7 +169,7 @@ struct spectra {
                        this non-diagonal element is independent on k, and equal to +1 or -1.
                     */
 
-  double * ddln_pk; /**< second derivative of above array with respect to log(tau), for spline interpolation. So:
+  double ** ddln_pk; /**< second derivative of above array with respect to log(tau), for spline interpolation. So:
                        - for index_ic1 = index_ic, we spline ln[P(k)] vs. ln(k), which is
                        good since this function is usually smooth.
                        - for non-diagonal coefficients, we spline
@@ -259,7 +264,8 @@ extern "C" {
                       enum linear_or_logarithmic mode,
                       double z,
                       double * output_tot,
-                      double * output_ic
+                      double * output_ic,
+                      int index_pk
                       );
 
   int spectra_pk_at_k_and_z(
@@ -269,7 +275,8 @@ extern "C" {
                             double k,
                             double z,
                             double * pk,
-                            double * pk_ic
+                            double * pk_ic,
+                            int index_pk
                             );
 
   int spectra_pk_nl_at_z(
@@ -362,8 +369,8 @@ extern "C" {
                  struct perturbs * ppt,
                  struct primordial * ppm,
                  struct nonlinear *pnl,
-                 struct spectra * psp
-                 );
+                 struct spectra * psp,
+                 int index_pk);
 
   int spectra_sigma(
                     struct background * pba,
