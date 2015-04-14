@@ -567,7 +567,10 @@ int perturb_indices_of_perturbs(
   ppt->has_source_phi_prime = _FALSE_;
   ppt->has_source_phi_plus_psi = _FALSE_;
   ppt->has_source_psi = _FALSE_;
-  ppt->has_source_R = _FALSE_;
+  ppt->has_source_disp_matter = _FALSE_;
+  ppt->has_source_disp_boost = _FALSE_;
+  ppt->has_source_disp_b = _FALSE_;
+  ppt->has_source_disp_cdm = _FALSE_;
 
   /** - source flags and indices, for sources that all modes have in
       common (temperature, polarization, ...). For temperature, the
@@ -628,7 +631,13 @@ int perturb_indices_of_perturbs(
       }
 
       if (ppt->has_pk_displacement == _TRUE_){
-        ppt->has_source_R = _TRUE_;
+        ppt->has_lss = _TRUE_;
+        ppt->has_source_delta_m = _TRUE_;
+        ppt->has_source_disp_matter = _TRUE_;
+        ppt->has_source_disp_boost = _TRUE_;
+        ppt->has_source_disp_b = _TRUE_;
+        if (pba->has_cdm == _TRUE_)
+          ppt->has_source_disp_cdm = _TRUE_;
       }
 
       if (ppt->has_density_transfers == _TRUE_) {
@@ -717,7 +726,10 @@ int perturb_indices_of_perturbs(
       class_define_index(ppt->index_tp_phi_prime,  ppt->has_source_phi_prime, index_type,1);
       class_define_index(ppt->index_tp_phi_plus_psi,ppt->has_source_phi_plus_psi,index_type,1);
       class_define_index(ppt->index_tp_psi,        ppt->has_source_psi,       index_type,1);
-      class_define_index(ppt->index_tp_R,          ppt->has_source_R,         index_type,1);
+      class_define_index(ppt->index_tp_disp_matter,ppt->has_source_disp_matter, index_type,1);
+      class_define_index(ppt->index_tp_disp_boost, ppt->has_source_disp_boost,index_type,1);
+      class_define_index(ppt->index_tp_disp_b,     ppt->has_source_disp_b,    index_type,1);
+      class_define_index(ppt->index_tp_disp_cdm,   ppt->has_source_disp_cdm,  index_type,1);
       ppt->tp_size[index_md] = index_type;
 
       class_test(index_type == 0,
@@ -5130,8 +5142,8 @@ int perturb_einstein(
        really want gauge-dependent results) */
 
     if (ppt->has_source_delta_m == _TRUE_) {
-      //ppw->delta_m += 3. *ppw->pvecback[pba->index_bg_a]*ppw->pvecback[pba->index_bg_H] * ppw->theta_m/k2;
-      ppw->delta_m -= 2.*ppw->pvecback[pba->index_bg_H_prime]/ppw->pvecback[pba->index_bg_H] * ppw->theta_m/k2;
+      ppw->delta_m += 3. *ppw->pvecback[pba->index_bg_a]*ppw->pvecback[pba->index_bg_H] * ppw->theta_m/k2;
+      //ppw->delta_m -= 2.*ppw->pvecback[pba->index_bg_H_prime]/ppw->pvecback[pba->index_bg_H] * ppw->theta_m/k2;
     }
 
     if (ppt->has_source_theta_m == _TRUE_) {
@@ -5927,21 +5939,39 @@ int perturb_sources(
     }
 
     /* "comoving curvature perturbation" R */
-    if (ppt->has_source_R == _TRUE_) {
-      double phi=0., phiprime=0.,H, a;
+    if (ppt->has_pk_displacement == _TRUE_){
+
+      double H, a, R, delta_b_tom, delta_cdm_tom, theta_tot;
+      double a_prime_over_a, rho_plus_p_tot;
       a = pvecback[pba->index_bg_a];
       H = pvecback[pba->index_bg_H];
+      a_prime_over_a = a*H;
+      rho_plus_p_tot = 2./3.*(pba->K/a/a-pvecback[pba->index_bg_H_prime]/a);
+      theta_tot = ppw->rho_plus_p_theta/rho_plus_p_tot;
+
+      /** Valid in BOTH synchronous and longitudinal gauge */
+      delta_b_tom = y[ppw->pv->index_pt_delta_b] - 3.*a*H*y[ppw->pv->index_pt_theta_b]/k/k;
       if (ppt->gauge == newtonian){
-        phi = y[ppw->pv->index_pt_phi];
-        phiprime = dy[ppw->pv->index_pt_phi];
+        if (ppt->has_source_disp_cdm == _TRUE_)
+          delta_cdm_tom = y[ppw->pv->index_pt_delta_cdm] - 3.*a*H*y[ppw->pv->index_pt_theta_cdm]/k/k;
+        R = -y[ppw->pv->index_pt_phi]-a_prime_over_a*theta_tot/k/k;
       }
       if (ppt->gauge == synchronous){
-        phi = y[ppw->pv->index_pt_eta] - a_prime_over_a * pvecmetric[ppw->index_mt_alpha];
-        phiprime = dy[ppw->pv->index_pt_eta]
-          - a_prime_over_a_prime * pvecmetric[ppw->index_mt_alpha]
-          - a_prime_over_a * pvecmetric[ppw->index_mt_alpha_prime];
+        if (ppt->has_source_disp_cdm == _TRUE_)
+          delta_cdm_tom = y[ppw->pv->index_pt_delta_cdm];
+        R = y[ppw->pv->index_pt_eta] - a_prime_over_a * theta_tot/k/k;
       }
-      _set_source_(ppt->index_tp_R) = phi+2./3.*(phiprime/(a*H)+phi)*3./2.*(H*H+pba->K/a/a)/(pba->K/a/a-pvecback[pba->index_bg_H_prime]/a);
+
+
+      if (ppt->has_source_disp_boost == _TRUE_)
+        _set_source_(ppt->index_tp_disp_boost) = 3.*R;
+      if (ppt->has_source_disp_matter == _TRUE_)
+        _set_source_(ppt->index_tp_disp_matter) = ppw->delta_m - 3.*R;
+      if (ppt->has_source_disp_b == _TRUE_)
+        _set_source_(ppt->index_tp_disp_b) = delta_b_tom - 3.*R;
+      if (ppt->has_source_disp_cdm == _TRUE_)
+        _set_source_(ppt->index_tp_disp_cdm) = delta_cdm_tom - 3.*R;
+
 
     }
 

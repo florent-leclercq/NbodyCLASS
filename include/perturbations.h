@@ -253,10 +253,13 @@ struct perturbs
   short has_source_theta_ur; /**< do we need source for theta of ultra-relativistic neutrinos/relics? */
   short has_source_theta_ncdm; /**< do we need source for theta of all non-cold dark matter species (e.g. massive neutrinos)? */
   short has_source_phi;          /**< do we need source for metric fluctuation phi? */
-  short has_source_R;            /**< do we need source for comoving curvature perturbation R? */
   short has_source_phi_prime;    /**< do we need source for metric fluctuation phi'? */
   short has_source_phi_plus_psi; /**< do we need source for metric fluctuation (phi+psi)? */
   short has_source_psi;          /**< do we need source for metric fluctuation psi? */
+  short has_source_disp_matter;  /**< do we need source for matter displacement field? */
+  short has_source_disp_boost;   /**< do we need source for 3R? (R = comoving curvature perturbation) */
+  short has_source_disp_b;       /**< do we need source for baryon displacement field? */
+  short has_source_disp_cdm;     /**< do we need source for cdm displacement field? */
 
   /* remember that the temperature source function includes three
      terms that we call 0,1,2 (since the strategy in class v > 1.7 is
@@ -294,7 +297,10 @@ struct perturbs
   int index_tp_phi_prime;    /**< index value for metric fluctuation phi' */
   int index_tp_phi_plus_psi; /**< index value for metric fluctuation phi+psi */
   int index_tp_psi;          /**< index value for metric fluctuation psi */
-  int index_tp_R;          /**< index value for metric fluctuation phi */
+  int index_tp_disp_matter;  /**< index value for matter displacement field  */
+  int index_tp_disp_boost;   /**< index value for displacement boost */
+  int index_tp_disp_b;       /**< index value for baryon displacement field  */
+  int index_tp_disp_cdm;     /**< index value for cold dark matter displacement field */
 
   int * tp_size; /**< number of types tp_size[index_md] included in computation for each mode */
 

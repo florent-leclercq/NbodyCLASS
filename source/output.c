@@ -637,8 +637,14 @@ int output_pk(
 
   if (index_pk == psp->index_pk_delta_m)
     sprintf(pktype,"matter");
-  else if (index_pk == psp->index_pk_displacement)
-    sprintf(pktype,"disp");
+  else if (index_pk == psp->index_pk_disp_matter)
+    sprintf(pktype,"disp_matter");
+  else if (index_pk == psp->index_pk_disp_boost)
+    sprintf(pktype,"disp_boost");
+  else if (index_pk == psp->index_pk_disp_b)
+    sprintf(pktype,"disp_baryons");
+  else if (index_pk == psp->index_pk_disp_cdm)
+    sprintf(pktype,"disp_cdm");
   else
     sprintf(pktype,"unknown");
 

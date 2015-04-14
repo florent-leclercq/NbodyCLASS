@@ -1536,7 +1536,7 @@ int spectra_indices(
 
   if (ppt->has_pk == _TRUE_) {
 
-    int pk_size_max=2;
+    int pk_size_max=5;
     class_alloc(psp->index_tp_for_pk,sizeof(int)*pk_size_max,psp->error_message);
     index_pk = 0;
     if (ppt->has_source_delta_m == _TRUE_){
@@ -1544,9 +1544,24 @@ int spectra_indices(
       psp->index_tp_for_pk[index_pk] = ppt->index_tp_delta_m;
       index_pk++;
     }
-    if (ppt->has_source_R == _TRUE_){
-      psp->index_pk_displacement = index_pk;
-      psp->index_tp_for_pk[index_pk] = ppt->index_tp_R;
+    if (ppt->has_source_disp_boost == _TRUE_){
+      psp->index_pk_disp_boost = index_pk;
+      psp->index_tp_for_pk[index_pk] = ppt->index_tp_disp_boost;
+      index_pk++;
+    }
+    if (ppt->has_source_disp_matter == _TRUE_){
+      psp->index_pk_disp_boost = index_pk;
+      psp->index_tp_for_pk[index_pk] = ppt->index_tp_disp_matter;
+      index_pk++;
+    }
+    if (ppt->has_source_disp_b == _TRUE_){
+      psp->index_pk_disp_b = index_pk;
+      psp->index_tp_for_pk[index_pk] = ppt->index_tp_disp_b;
+      index_pk++;
+    }
+    if (ppt->has_source_disp_cdm == _TRUE_){
+      psp->index_pk_disp_cdm = index_pk;
+      psp->index_tp_for_pk[index_pk] = ppt->index_tp_disp_cdm;
       index_pk++;
     }
     psp->pk_size = index_pk;
