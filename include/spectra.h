@@ -145,7 +145,7 @@ struct spectra {
 
   int index_pk_delta_m;      /**< index for matter power spectrum */
   int index_pk_disp_matter;  /**< index for displacement power spectrum */
-  int index_pk_disp_boost;   /**< index for displacement power spectrum */
+  int index_pk_disp_ncdm;   /**< index for displacement power spectrum */
   int index_pk_disp_b;       /**< index for displacement power spectrum */
   int index_pk_disp_cdm;     /**< index for displacement power spectrum */
   int pk_size;

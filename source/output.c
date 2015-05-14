@@ -116,7 +116,7 @@ int output_init(
 
   /** - check that we really want to output at least one file */
 
-  if ((ppt->has_cls == _FALSE_) && (ppt->has_pk_matter == _FALSE_) && (ppt->has_density_transfers == _FALSE_) && (ppt->has_velocity_transfers == _FALSE_) && (pop->write_background == _FALSE_) && (pop->write_thermodynamics == _FALSE_) && (pop->write_primordial == _FALSE_)) {
+  if ((ppt->has_cls == _FALSE_) && (ppt->has_pk_matter == _FALSE_) && (ppt->has_pk_displacement == _FALSE_) && (ppt->has_density_transfers == _FALSE_) && (ppt->has_velocity_transfers == _FALSE_) && (pop->write_background == _FALSE_) && (pop->write_thermodynamics == _FALSE_) && (pop->write_primordial == _FALSE_)) {
     if (pop->output_verbose > 0)
       printf("No output files requested. Output module skipped.\n");
     return _SUCCESS_;
@@ -639,12 +639,14 @@ int output_pk(
     sprintf(pktype,"matter");
   else if (index_pk == psp->index_pk_disp_matter)
     sprintf(pktype,"disp_matter");
-  else if (index_pk == psp->index_pk_disp_boost)
-    sprintf(pktype,"disp_boost");
   else if (index_pk == psp->index_pk_disp_b)
     sprintf(pktype,"disp_baryons");
-  else if (index_pk == psp->index_pk_disp_cdm)
+  else if ((ppt->has_source_disp_cdm == _TRUE_) && (index_pk == psp->index_pk_disp_cdm))
     sprintf(pktype,"disp_cdm");
+  else if ((ppt->has_source_disp_ncdm == _TRUE_) &&
+           (index_pk >= psp->index_pk_disp_ncdm) &&
+           (index_pk < psp->index_pk_disp_ncdm+pba->N_ncdm))
+    sprintf(pktype,"disp_ncdm%d",index_pk-psp->index_pk_disp_ncdm);
   else
     sprintf(pktype,"unknown");
 
