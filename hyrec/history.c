@@ -29,23 +29,54 @@ void rec_get_cosmoparam(FILE *fin, FILE *fout, REC_COSMOPARAMS *param) {
 
   /* Cosmology */
   if (fout!=NULL && PROMPT==1) fprintf(fout, "Enter CMB temperature today [Kelvin]: ");
-  fscanf(fin, "%lg", &(param->T0));
+  if(fscanf(fin, "%lg", &(param->T0)) != 1)
+  {
+   fprintf( stderr, "fscanf error\n");
+   exit(1);
+  }
   if (fout!=NULL && PROMPT==1) fprintf(fout, "Enter baryon density, omega_bh2: ");
-  fscanf(fin, "%lg", &(param->obh2));
+  if(fscanf(fin, "%lg", &(param->obh2)) != 1)
+  {
+   fprintf( stderr, "fscanf error\n");
+   exit(1);
+  }
   if (fout!=NULL && PROMPT==1) fprintf(fout, "Enter total matter (CDM+baryons) density, omega_mh2: ");
-  fscanf(fin, "%lg", &(param->omh2));
+  if(fscanf(fin, "%lg", &(param->omh2)) != 1)
+  {
+   fprintf( stderr, "fscanf error\n");
+   exit(1);
+  }
   if (fout!=NULL && PROMPT==1) fprintf(fout, "Enter curvature, omega_kh2: ");
-  fscanf(fin, "%lg", &(param->okh2));
+  if(fscanf(fin, "%lg", &(param->okh2)) != 1)
+  {
+   fprintf( stderr, "fscanf error\n");
+   exit(1);
+  }
   if (fout!=NULL && PROMPT==1) fprintf(fout, "Enter dark energy density, omega_deh2: ");
-  fscanf(fin, "%lg", &(param->odeh2));
+  if(fscanf(fin, "%lg", &(param->odeh2)) != 1)
+  {
+   fprintf( stderr, "fscanf error\n");
+   exit(1);
+  }
   if (fout!=NULL && PROMPT==1) fprintf(fout, "Enter dark energy equation of state parameters, w wa: ");
-  fscanf(fin, "%lg %lg", &(param->w0), &(param->wa));
+  if(fscanf(fin, "%lg %lg", &(param->w0), &(param->wa)) != 1)
+  {
+   fprintf( stderr, "fscanf error\n");
+   exit(1);
+  }
   if (fout!=NULL && PROMPT==1) fprintf(fout, "Enter primordial helium mass fraction, Y: ");
-  fscanf(fin, "%lg", &(param->Y));
+  if(fscanf(fin, "%lg", &(param->Y)) != 1)
+  {
+   fprintf( stderr, "fscanf error\n");
+   exit(1);
+  }
   if (fout!=NULL && PROMPT==1) fprintf(fout, "Enter effective number of neutrino species, N_nu_eff: ");
-  fscanf(fin, "%lg", &(param->Nnueff));
-
-  param->nH0 = 11.223846333047*param->obh2*(1.-param->Y);  /* number density of hudrogen today in m-3 */
+  if(fscanf(fin, "%lg", &(param->Nnueff)) != 1)
+  {
+   fprintf( stderr, "fscanf error\n");
+   exit(1);
+  }
+  param->nH0 = 11.223846333047*param->obh2*(1.-param->Y);  /* number density of hydrogen today in m-3 */
   param->fHe = param->Y/(1-param->Y)/3.97153;              /* abundance of helium by number */
   
 
