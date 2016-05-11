@@ -1,3 +1,7 @@
+doc/latex/class.aux
+doc/latex/class.log
+doc/latex/class.pdf
+doc/latex/class.synctex.gz
 output/
 *~
 build/

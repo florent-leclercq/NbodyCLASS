@@ -28,8 +28,8 @@ AR        = ar rv
 PYTHON = python
 
 # your optimization flag
-OPTFLAG = -O4 -ffast-math #-march=native
-#OPTFLAG = -Ofast -ffast-math #-march=native
+#OPTFLAG = -O4 -ffast-math #-march=native
+OPTFLAG = -Ofast -ffast-math
 #OPTFLAG = -fast
 
 # your openmp flag (comment for compiling without openmp)
@@ -39,7 +39,7 @@ OMPFLAG   = -fopenmp
 
 # all other compilation flags
 CCFLAG = -g -fPIC
-LDFLAG = -g -fPIC
+LDFLAG = -g -fPIC -L $(HOME)/.local/lib
 
 # leave blank to compile without HyRec, or put path to HyRec directory
 # (with no slash at the end: e.g. hyrec or ../hyrec)
@@ -53,7 +53,10 @@ HYREC = hyrec
 CCFLAG += -D__CLASSDIR__='"$(MDIR)"'
 
 # where to find include files *.h
-INCLUDES = -I $(MDIR)/include
+INCLUDES = -I $(MDIR)/include -I $(HOME)/.local/include
+
+# libraries
+LDLIBS = -lm
 
 # automatically add external programs if needed. First, initialize to blank.
 EXTERNAL =
@@ -77,10 +80,10 @@ INCLUDES += -I $(MDIR)/hyrec
 EXTERNAL += hyrectools.o helium.o hydrogen.o history.o
 endif
 
-$(WRKDIR)/%.o:  %.c .base
+$(WRKDIR)/%.o:%.c .base
 	$(CC) $(OPTFLAG) $(OMPFLAG) $(CCFLAG) $(INCLUDES) -c $< -o $@
 
-TOOLS = growTable.o dei_rkck.o sparse.o evolver_rkck.o  evolver_ndf15.o arrays.o parser.o quadrature.o hyperspherical.o common.o
+TOOLS = growTable.o dei_rkck.o sparse.o evolver_rkck.o evolver_ndf15.o arrays.o parser.o quadrature.o hyperspherical.o common.o
 
 SOURCE = input.o background.o thermodynamics.o perturbations.o primordial.o nonlinear.o transfer.o spectra.o lensing.o
 
@@ -128,7 +131,7 @@ TEST_HYPERSPHERICAL = test_hyperspherical.o
 
 TEST_STEPHANE = test_stephane.o
 
-C_TOOLS =  $(addprefix tools/, $(addsuffix .c,$(basename $(TOOLS))))
+C_TOOLS = $(addprefix tools/, $(addsuffix .c,$(basename $(TOOLS))))
 C_SOURCE = $(addprefix source/, $(addsuffix .c,$(basename $(SOURCE) $(OUTPUT))))
 C_TEST = $(addprefix test/, $(addsuffix .c,$(basename $(TEST_DEGENERACY) $(TEST_LOOPS) $(TEST_TRANSFER) $(TEST_NONLINEAR) $(TEST_PERTURBATIONS) $(TEST_THERMODYNAMICS))))
 C_MAIN = $(addprefix main/, $(addsuffix .c,$(basename $(CLASS))))
@@ -139,56 +142,57 @@ INI_ALL = explanatory.ini lcdm.ini
 MISC_FILES = Makefile CPU psd_FD_single.dat myselection.dat myevolution.dat README bbn/sBBN.dat external_Pk/* cpp
 PYTHON_FILES = python/classy.pyx python/setup.py python/cclassy.pxd python/test_class.py
 
-
-
+.PHONY: all call clean
 
 all: class libclass.a classy
 
-libclass.a: $(TOOLS) $(SOURCE) $(EXTERNAL)
-	$(AR)  $@ $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL))
+call: clean .base all
+
+libclass.a: $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL))
+	$(AR) $@ $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL))
 
 class: $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL) $(OUTPUT) $(CLASS))
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o class $(addprefix $(WRKDIR)/,$(notdir $^)) -lm
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o class $(addprefix $(WRKDIR)/,$(notdir $^)) $(LDLIBS)
 
 test_sigma: $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL) $(OUTPUT) $(TEST_SIGMA))
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o test_sigma $(addprefix $(WRKDIR)/,$(notdir $^)) -lm
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o test_sigma $(addprefix $(WRKDIR)/,$(notdir $^)) $(LDLIBS)
 
 test_loops: $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL) $(OUTPUT) $(TEST_LOOPS))
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o $@ $(addprefix $(WRKDIR)/,$(notdir $^)) -lm
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o $@ $(addprefix $(WRKDIR)/,$(notdir $^)) $(LDLIBS)
 
 test_stephane: $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL) $(OUTPUT) $(TEST_STEPHANE))
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o $@ $(addprefix $(WRKDIR)/,$(notdir $^)) -lm
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o $@ $(addprefix $(WRKDIR)/,$(notdir $^)) $(LDLIBS)
 
 test_degeneracy: $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL) $(OUTPUT) $(TEST_DEGENERACY))
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o $@ $(addprefix $(WRKDIR)/,$(notdir $^)) -lm
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o $@ $(addprefix $(WRKDIR)/,$(notdir $^)) $(LDLIBS)
 
 test_transfer: $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL) $(TEST_TRANSFER))
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o  $@ $(addprefix $(WRKDIR)/,$(notdir $^)) -lm
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o $@ $(addprefix $(WRKDIR)/,$(notdir $^)) $(LDLIBS)
 
 test_nonlinear: $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL) $(TEST_NONLINEAR))
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o  $@ $(addprefix $(WRKDIR)/,$(notdir $^)) -lm
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o $@ $(addprefix $(WRKDIR)/,$(notdir $^)) $(LDLIBS)
 
 test_perturbations: $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL) $(TEST_PERTURBATIONS))
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o  $@ $(addprefix $(WRKDIR)/,$(notdir $^)) -lm
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o $@ $(addprefix $(WRKDIR)/,$(notdir $^)) $(LDLIBS)
 
 test_thermodynamics: $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL) $(TEST_THERMODYNAMICS))
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o  $@ $(addprefix $(WRKDIR)/,$(notdir $^)) -lm
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o $@ $(addprefix $(WRKDIR)/,$(notdir $^)) $(LDLIBS)
 
 test_background: $(addprefix $(WRKDIR)/, $(TOOLS) $(SOURCE) $(EXTERNAL) $(TEST_BACKGROUND))
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o  $@ $(addprefix $(WRKDIR)/,$(notdir $^)) -lm
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o $@ $(addprefix $(WRKDIR)/,$(notdir $^)) $(LDLIBS)
 
-test_hyperspherical: $(TOOLS) $(TEST_HYPERSPHERICAL)
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o test_hyperspherical $(addprefix $(WRKDIR)/,$(notdir $^)) -lm
+test_hyperspherical: $(addprefix $(WRKDIR)/, $(TOOLS) $(TEST_HYPERSPHERICAL))
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o test_hyperspherical $(addprefix $(WRKDIR)/,$(notdir $^)) $(LDLIBS)
 
 
 tar: $(C_ALL) $(C_TEST) $(H_ALL) $(PRE_ALL) $(INI_ALL) $(MISC_FILES) $(HYREC) $(PYTHON_FILES)
 	tar czvf class.tar.gz $(C_ALL) $(H_ALL) $(PRE_ALL) $(INI_ALL) $(MISC_FILES) $(HYREC) $(PYTHON_FILES)
 
 classy: libclass.a python/classy.pyx python/cclassy.pxd
-	cd python; export CC=$(CC); $(PYTHON) setup.py install $(PYTHONFLAGS)
+	@cd python; @export CC=$(CC); $(PYTHON) setup.py install $(PYTHONFLAGS)
 
-clean: .base
-	rm -rf $(WRKDIR);
-	rm -f libclass.a
-	rm -f $(MDIR)/python/classy.c
-	rm -rf $(MDIR)/python/build
+clean:
+	@rm -rf $(WRKDIR)
+	@rm -f libclass.a
+	@rm -f $(MDIR)/python/classy.c
+	@rm -rf $(MDIR)/python/build
