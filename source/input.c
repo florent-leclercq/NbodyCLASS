@@ -227,11 +227,11 @@ int input_init(
   /** These two arrays must contain the strings of names to be searched
       for and the coresponding new parameter */
   char * const target_namestrings[] = {"100*theta_s","Omega_dcdmdr","omega_dcdmdr",
-                                       "Omega_scf","Omega_ini_dcdm","omega_ini_dcdm"};
+                                       "Omega_scf","Omega_ini_dcdm","omega_ini_dcdm","sigma8"};
   char * const unknown_namestrings[] = {"h","Omega_ini_dcdm","Omega_ini_dcdm",
-                                        "scf_shooting_parameter","Omega_dcdmdr","omega_dcdmdr"};
+                                        "scf_shooting_parameter","Omega_dcdmdr","omega_dcdmdr","A_s"};
   enum computation_stage target_cs[] = {cs_thermodynamics, cs_background, cs_background,
-                                        cs_background, cs_background, cs_background};
+                                        cs_background, cs_background, cs_background, cs_spectra};
 
   int input_verbose = 0, int1, aux_flag;
 
@@ -3329,6 +3329,19 @@ int input_try_unknown_parameters(double * unknown_parameter,
     input_verbose = param;
   else
     input_verbose = 0;
+  
+  /** Optimise flags for sigma8 calculation */
+  pt.k_max_for_pk=1.0;
+  pt.has_pk_matter=_TRUE_;
+  pt.has_perturbations=_TRUE_;
+  pt.has_cl_cmb_temperature=_FALSE_;
+  pt.has_cls=_FALSE_;
+  pt.has_cl_cmb_polarization=_FALSE_;
+  pt.has_cl_cmb_lensing_potential=_FALSE_;
+  pt.has_cl_number_count=_FALSE_;
+  pt.has_cl_lensing_potential=_FALSE_;
+  pt.has_density_transfers=_FALSE_;
+  pt.has_velocity_transfers=_FALSE_;
 
   /** Do computations */
   if (pfzw->required_computation_stage >= cs_background){
@@ -3417,6 +3430,9 @@ int input_try_unknown_parameters(double * unknown_parameter,
         rho_dr_today = 0.;
       output[i] = -(rho_dcdm_today+rho_dr_today)/(ba.H0*ba.H0)+ba.Omega0_dcdmdr;
       break;
+    case tn_sigma8:
+      output[i] = sp.sigma8-pfzw->target_value[i];
+    break ;
     }
   }
 
@@ -3571,6 +3587,13 @@ int input_get_guess(double *xguess,
       xguess[index_guess] = pfzw->target_value[index_guess]*a_decay;
       dxdy[index_guess] = a_decay;
       //printf("x = Omega_ini_guess = %g, dxdy = %g\n",*xguess,*dxdy);
+      break;
+    case tn_sigma8:
+      /** Assurme linear relationship between A_s and sigma8
+       and fix coefficient according to vanilla LambdaCDM.
+       Should be good enough... */
+      xguess[index_guess] = 2.43e-9/0.87659*pfzw->target_value[index_guess];
+      dxdy[index_guess] = 2.43e-9/0.87659;
       break;
     }
     //printf("xguess = %g\n",xguess[index_guess]);

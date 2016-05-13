@@ -29,8 +29,8 @@ PYTHON = python
 
 # your optimization flag
 #OPTFLAG = -O4 -ffast-math #-march=native
-OPTFLAG = -Ofast -ffast-math
-#OPTFLAG = -fast
+#OPTFLAG = -Ofast -ffast-math
+OPTFLAG = -ffast-math
 
 # your openmp flag (comment for compiling without openmp)
 OMPFLAG   = -fopenmp
